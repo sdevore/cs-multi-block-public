@@ -1,0 +1,41 @@
+# GitHub Action: whenever creating a new release of the source code,
+# also create a release of the installable plugin.
+# Steps to execute:
+# - Checkout the source code
+# - Run "composer install" to download all dependencies under vendor/ (phpspreadsheet)
+# - Run "npm ci" to download all dependencies under node_modules/ (wp-scripts)
+# - Run "npm run build" to create the build/ directory
+# - Create a .zip file, using wp-scripts plugin-zip command
+# - Upload the .zip file as an artifact to the action (this step is possibly optional)
+# - Upload the .zip file as a release, for download
+name: Generate Installable Plugin, and Upload as Release Asset
+on:
+    release:
+        types: [published]
+jobs:
+    build:
+        name: Upload Release Asset
+        runs-on: ubuntu-latest
+        env:
+            PLUGIN_NAME: cs-multi-block-public
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Build project
+              run: composer install --no-dev --optimize-autoloader
+            - name: Create artifact
+              run: |
+                  npm ci
+                  npm run build
+                  npm run plugin-zip
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.PLUGIN_NAME }}
+                  path: ${{ env.PLUGIN_NAME }}.zip
+            - name: Upload to release
+              uses: JasonEtco/upload-to-release@master
+              with:
+                  args: ${{ env.PLUGIN_NAME }}.zip application/zip
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
