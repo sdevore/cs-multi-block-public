@@ -1,0 +1,11 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+@use "style.scss";
+
+.wp-block-example-block-one.is-selected {
+	border: 2px dotted #f00;
+}
