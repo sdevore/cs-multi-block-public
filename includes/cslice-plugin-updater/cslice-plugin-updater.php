@@ -11,15 +11,60 @@ use CreativeSlice\WPAdmin\parsedown\Parsedown;
 
 
 class Plugin_Updater {
-    private $plugin_slug;
+
+	/**
+	 * Plugin directory
+	 *
+	 * @var string github-updater-demo
+	 */
+	private string $pluginDir = '';
+	/**
+	 * Plugin file
+	 *
+	 * @var string github-updater-demo/github-updater-demo.php
+	 */
+	private string $pluginFile = '';
+	private string $pluginFilename = '';
+
+	private $plugin_slug;
     private $plugin_data;
     private $github_api_url;
     private $github_token;
 
 	private $is_built = false;
 
+	/**
+	 * Relative path to plugin icon from plugin root.
+	 *
+	 * @var string assets/icon.png
+	 */
+	private string $pluginIcon = '';
+
+	/**
+	 * Relative path to small plugin banner from plugin root.
+	 *
+	 * @var string assets/banner-772x250.jpg
+	 */
+	private string $pluginBannerSmall = '';
+
+	/**
+	 * Relative path to large plugin banner from plugin root.
+	 *
+	 * @var string assets/banner-1544x500.jpg
+	 */
+	private string $pluginBannerLarge = '';
+
     public function __construct($plugin_file, $github_repo) {
-        $this->plugin_slug = plugin_basename($plugin_file);
+		$this->pluginFile = str_replace(
+			WP_PLUGIN_DIR . '/', '', $plugin_file
+		);
+
+		// e.g. `github-updater-demo` and `github-updater-demo.php`
+		[$this->pluginDir, $this->pluginFilename] = explode(
+			'/', $this->pluginFile
+		);
+
+		$this->plugin_slug = plugin_basename($plugin_file);
         $this->github_api_url = "https://api.github.com/repos/{$github_repo}/releases/latest";
 
 
@@ -47,6 +92,93 @@ class Plugin_Updater {
 	public function set_token($token) {
 		$this->github_token = $token;
 		return $this;
+	}
+
+	public function set_plugin_icon(string $file): self
+	{
+		$this->pluginIcon = ltrim($file, '/');
+
+		return $this;
+	}
+
+	/**
+	 * Set relative path to small plugin banner from plugin root.
+	 *
+	 * @param string $file assets/banner-772x250.jpg
+	 * @return $this
+	 */
+	public function set_plugin_banner_small(string $file): self
+	{
+		$this->pluginBannerSmall = ltrim($file, '/');
+
+		return $this;
+	}
+
+	/**
+	 * Set relative path to large plugin banner from plugin root.
+	 *
+	 * @param string $file assets/banner-1544x500.jpg
+	 * @return $this
+	 */
+	public function set_plugin_banner_large(string $file): self
+	{
+		$this->pluginBannerLarge = ltrim($file, '/');
+
+		return $this;
+	}
+
+	/**
+	 * Get plugin icon if defined and valid.
+	 *
+	 * @return string https://example.org/wp-content/plugins/github-updater-demo/assets/icon.png
+	 */
+	private function get_plugin_icon(): string
+	{
+		if (!$this->pluginIcon) return '';
+
+		$pluginIconPath = $this->pluginDir . '/' . $this->pluginIcon;
+
+		return plugins_url($pluginIconPath);
+	}
+
+	/**
+	 * Get small plugin banner (772x250).
+	 *
+	 * @return string https://example.org/wp-content/plugins/github-updater-demo/assets/banner-772x250.jpg
+	 */
+	private function get_plugin_banner_small(): string
+	{
+		if (!$this->pluginBannerSmall) return '';
+
+		return $this->get_plugin_file($this->pluginBannerSmall);
+	}
+
+	/**
+	 * Get plugin file if exists.
+	 *
+	 * @param string $file assets/icon.png
+	 * @return string https://example.org/wp-content/plugins/github-updater-demo/assets/icon.png
+	 */
+	private function get_plugin_file(string $file): string
+	{
+		$file = sprintf('%s/%s', $this->pluginDir, $file);
+
+		if (!file_exists(WP_PLUGIN_DIR . '/' . $file)) return '';
+
+		return plugins_url($file);
+	}
+
+
+	/**
+	 * Get large plugin banner (1544x500).
+	 *
+	 * @return string https://example.org/wp-content/plugins/github-updater-demo/assets/banner-1544x500.jpg
+	 */
+	private function get_plugin_banner_large(): string
+	{
+		if (!$this->pluginBannerLarge) return '';
+
+		return $this->get_plugin_file($this->pluginBannerLarge);
 	}
 
 	/**
@@ -109,15 +241,19 @@ class Plugin_Updater {
 			$result['author'] = $author;
 		}
 
-//		// If small plugin banner exists, set it
-//		if ($pluginBannerSmall = $this->getPluginBannerSmall()) {
-//			$result['banners']['low'] = $pluginBannerSmall;
-//		}
-//
-//		// If large plugin banner exists, set it
-//		if ($pluginBannerLarge = $this->getPluginBannerLarge()) {
-//			$result['banners']['high'] = $pluginBannerLarge;
-//		}
+		// If small plugin banner exists, set it
+		if ($pluginBannerSmall = $this->get_plugin_banner_small()) {
+			$result['banners']['low'] = $pluginBannerSmall;
+		}
+
+		// If large plugin banner exists, set it
+		if ($pluginBannerLarge = $this->get_plugin_banner_large()) {
+			$result['banners']['high'] = $pluginBannerLarge;
+		}
+
+		if ($pluginIcon = $this->get_plugin_icon()) {
+			$result['icons']['default'] = $pluginIcon;
+		}
 
 		// If release notes exist, set them as the changelog
 		if ($changelog = $release_info->body) {
@@ -157,16 +293,8 @@ class Plugin_Updater {
     }
 
     private function get_github_release_info() {
-		$options = [
-			'headers' => [
-				'Accept' => 'application/vnd.github.v3+json',
+		$options = $this->get_http_request_options();
 
-				'User-Agent' => 'WordPress/' . get_bloginfo('version')
-			]
-		];
-		if (isset($this->github_token) ) {
-			$options['headers']['Authorization'] = 'Bearer ' . $this->github_token;
-		}
 		$response = wp_remote_get($this->github_api_url, $options);
 
 
@@ -201,14 +329,7 @@ class Plugin_Updater {
         $url_parts = parse_url($package);
         $path_parts = explode('/', trim($url_parts['path'], '/'));
         $api_url = "https://api.github.com/repos/{$path_parts[0]}/{$path_parts[1]}/releases/tags/{$path_parts[4]}";
-
-        $response = wp_remote_get($api_url, [
-            'headers' => [
-                'Accept' => 'application/vnd.github+json',
-                'Authorization' => 'Bearer ' . $this->github_token,
-                'User-Agent' => 'WordPress/' . get_bloginfo('version')
-            ]
-        ]);
+		$response = wp_remote_get($api_url, $this->get_http_request_options(['headers' => ['Accept' => 'application/vnd.github+json']]));
 
         if (is_wp_error($response)) {
             return new \WP_Error('release_info_failed', 'Failed to get release information.');
@@ -226,17 +347,15 @@ class Plugin_Updater {
         if (empty($download_url)) {
             return new \WP_Error('asset_not_found', 'The specified asset was not found in the release.');
         }
-
-        $download_response = wp_remote_get($download_url, [
-            'timeout' => 300,
-            'stream' => true,
-            'filename' => wp_tempnam('github_update'),
-            'headers' => [
-                'Accept' => 'application/octet-stream',
-                'Authorization' => 'Bearer ' . $this->github_token,
-                'User-Agent' => 'WordPress/' . get_bloginfo('version')
-            ]
-        ]);
+		$options = $this->get_http_request_options([
+			'timeout' => 300,
+			'stream' => true,
+			'filename' => wp_tempnam('github_update'),
+			'headers' => [
+				'Accept' => 'application/octet-stream',
+			]
+		]);
+        $download_response = wp_remote_get($download_url, $options);
 
         if (is_wp_error($download_response)) {
             return new \WP_Error('download_failed', 'Failed to download the update package.');
@@ -247,7 +366,9 @@ class Plugin_Updater {
 
     public function http_request_args($args, $url) {
         if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
-            $args['headers']['Authorization'] = 'Bearer ' . $this->github_token;
+			if (!empty($this->github_token)) {
+				$args['headers']['Authorization'] = 'Bearer ' . $this->github_token;
+			}
         }
         return $args;
     }
@@ -272,5 +393,25 @@ class Plugin_Updater {
 				3
 			);
 		});
+	}
+
+	/**
+	 * @return array|array[]
+	 */
+	public function get_http_request_options($options = []): array
+	{
+		if (!isset($options['headers'])) {
+			$options['headers'] = [];
+		}
+		if (!isset($options['headers']['Accept'])) {
+			$options['headers']['Accept'] = 'application/vnd.github.v3+json';
+		}
+		if (!isset($options['headers']['User-Agent'])) {
+			$options['headers']['User-Agent'] = 'WordPress/' . get_bloginfo('version');
+		}
+		if (isset($this->github_token)) {
+			$options['headers']['Authorization'] = 'Bearer ' . $this->github_token;
+		}
+		return $options;
 	}
 }

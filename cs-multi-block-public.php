@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name:       Cs Multi Block Public
+ * Plugin Name:       CreativeSlice Multi Block Example Public
  * Description:       Example block scaffolded with Create Block tool.
  * Requires at least: 6.6
  * Requires PHP:      7.2
- * Version:           0.0.1
+ * Version:           0.0.0
  * Author:            The WordPress Contributors
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - GitHub Personal Access Token (PAT) with read access to repo
  * -- expires 2025.11.23
  */
-if (is_admin() && defined('RCSA_DATA_VISUALIZATION_UPDATER_GITHUB_PAT')) {
+if (is_admin()) {
 	// One should just check that the class doesn't exist in the current namespace for the
 	// current plugin, and then require the file and instantiate the class.
 	if (!class_exists('CreativeSlice\WPAdmin\Plugin_Updater')) {
@@ -33,6 +33,9 @@ if (is_admin() && defined('RCSA_DATA_VISUALIZATION_UPDATER_GITHUB_PAT')) {
 		__FILE__,
 		'sdevore/cs-multi-block-public'
 	))
+		->set_plugin_icon('assets/icon.png')
+		->set_plugin_banner_small('assets/banner-small.png')
+		->set_plugin_banner_large('assets/banner-large.png')
 	->plugin_is_built();
 
 }

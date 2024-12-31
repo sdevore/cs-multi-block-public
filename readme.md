@@ -1,4 +1,4 @@
-=== Cs Multi Block Public ===
+# Cs Multi Block Public
 Contributors:      Sam DeVore
 Tags:              block
 Tested up to:      6.6
@@ -8,14 +8,14 @@ License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
 This is an example of a plugin with multiple blocks that includes self updating from a public github repository based on releases.  Because this is an example of a built plug in it requires the build step in the github action to be set up and that property setup in the updater
 
-== Description ==
+## Description
 
 This is the long description. No limit, and you can use Markdown (as well as in the following sections).
 
 For backwards compatibility, if this section is missing, the full length of the short description will be used, and
 Markdown parsed.
 
-== Installation ==
+## Installation
 
 This section describes how to install the plugin and get it working.
 
@@ -43,12 +43,12 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 (or jpg, jpeg, gif).
 2. This is the second screen shot
 
-== Changelog ==
+## Changelog
 
 = 0.1.0 =
 * Release
 
-== Arbitrary section ==
+## Arbitrary section
 
 You may provide arbitrary sections, in the same format as the ones above. This may be of use for extremely complicated
 plugins where more information needs to be conveyed that doesn't fit into the categories of "description" or
