@@ -22,7 +22,6 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Get Current Release
-                id: get_current_release
                 uses: joutvhu/get-release@v1
                 with:
                   debug: true
