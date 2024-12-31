@@ -21,9 +21,9 @@ jobs:
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
-            - name: Build project
-              run: composer install --no-dev --optimize-autoloader
-            - name: Create artifact
+#            - name: Build project
+#              run: composer install --no-dev --optimize-autoloader
+            - name: Build and zip plugin for release asset
               run: |
                   npm ci
                   npm run build
