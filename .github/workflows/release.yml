@@ -22,14 +22,15 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Get Current Release
-                uses: joutvhu/get-release@v1
-                with:
+              id: get_current_release
+              uses: joutvhu/get-release@v1
+              with:
                   debug: true
-                env:
+              env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             - name: Find and Replace
-                uses: jacobtomlinson/gha-find-replace@v3
-                with:
+              uses: jacobtomlinson/gha-find-replace@v3
+              with:
                   find: " * Version:(.*)^(\d+\.)?(\d+\.)?(\*|\d+)$"
                   replace: " * Version:$1 ${{ steps.get_current_release.outputs.tag_name }}"
                   include: "${{ env.PLUGIN_NAME }}.php" # Will match all README.md files in any nested directory
